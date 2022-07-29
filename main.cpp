@@ -1,8 +1,8 @@
 #include <filesystem>
 #include <chrono>
 #include <format>
-#include "Encoder.h"
 #include "Decoder.h"
+#include "Encoder.h"
 
 namespace fs = std::filesystem;
 
@@ -16,7 +16,7 @@ public:
 		stop = std::chrono::high_resolution_clock::now();
 	}
 	float time() {
-		elapsedTime = std::chrono::duration<float, std::milli>(stop - start).count();
+		elapsedTime = std::chrono::duration<float>(stop - start).count();
 		return elapsedTime;
 	}
 private:
@@ -31,6 +31,7 @@ uintmax_t fileSize(fs::path const& path) {
 }
 
 int main() {
+	std::atexit(exittHandler);
 	auto timer = Timer();
 	std::fstream output1(R"(..\AdaptiveArithmeticCoding\testFile3.txt)", std::ios_base::out | std::ios_base::binary);
 	std::fstream input(R"(..\AdaptiveArithmeticCoding\testFile.txt)", std::ios_base::in | std::ios_base::binary);

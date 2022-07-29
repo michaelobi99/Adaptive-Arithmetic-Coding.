@@ -14,14 +14,6 @@
 const char* compressionName = "Adaptive order-0 model with arithmetic coding\n";
 const char* usage = "inputFile outputFile\n";
 
-//****************************************************************************************************
-//buildModel function and all its dependencies	
-
-void buildModel(unsigned char counts[]) {
-	buildTotals(counts);
-}
-//****************************************************************************************************
-
 
 void convertIntToSymbol(int c, Symbol& s) {
 	s.scale = totals[END_OF_STREAM + 1];
@@ -91,24 +83,18 @@ void compressFile(std::fstream& input, std::unique_ptr<stl::BitFile>& output) {
 	unsigned char counts[256];
 	for (auto& elem : counts)
 		elem = 1;
-	buildModel(counts);
+	initializeModel(counts);
 	size_t bufferSize = 4096;
 	std::string buffer;
 	size_t numBytesRead = 0;
-	numBytesRead = readBytes(input, buffer, bufferSize);
-	for (auto c : buffer) {
-		convertIntToSymbol(c, s);
-		encodeSymbol(output, s, low, high, underflowBits);
-		updateModel(c, counts);
-	}
-	while (numBytesRead == bufferSize) {
+	do {
 		numBytesRead = readBytes(input, buffer, bufferSize);
 		for (auto c : buffer) {
 			convertIntToSymbol(c, s);
 			encodeSymbol(output, s, low, high, underflowBits);
 			updateModel(c, counts);
 		}
-	}
+	} while (numBytesRead == bufferSize);
 	convertIntToSymbol(END_OF_STREAM, s);
 	encodeSymbol(output, s, low, high, underflowBits);
 	flushArithmeticEncoder(output, high, underflowBits);

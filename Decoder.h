@@ -70,7 +70,7 @@ void expandFile(std::unique_ptr<stl::BitFile>& input, std::fstream& output) {
 	unsigned char counts[256];
 	for (auto& elem : counts)
 		elem = 1;
-	buildModel(counts);
+	initializeModel(counts);
 	initializeArithmeticDecoder(input, code);
 	for (;;) {
 		getSymbolScale(s);
