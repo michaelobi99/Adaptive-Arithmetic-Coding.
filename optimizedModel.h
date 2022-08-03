@@ -1,47 +1,58 @@
 #pragma once
+#include <iostream>
+#include <algorithm>
+#include <ranges>
+#include <chrono>
 #include <tuple>
+#include <vector>
+#include <span>
+#include "Symbol.h"
 
 namespace mod2 {
 	using USHORT = unsigned short;
-	constexpr int END_OF_STREAM = 257;
+	unsigned short total = 0;
+	constexpr int END_OF_STREAM = 256;
+	constexpr int TREE_SIZE = 258;
+	constexpr int NO_OF_LEAFS = 257;
 	float timer = 0;
 	void exittHandler() {
 		printf("\ntotal update time = %f\n", timer);
 	}
 
-	struct Node {
-		char symbol = 0;
-		unsigned char count = 0;
-		USHORT leftChildCumCount = 0;
-		Node& operator= (const Node& other) {
-			if (this != &other) {
-				this->count = other.count;
-				this->leftChildCumCount = other.leftChildCumCount;
-				this->symbol = other.symbol;
+	struct Tree {
+		struct Node {
+			char symbol = 0;
+			unsigned char count = 0;
+			USHORT leftChildCumCount = 0;
+			bool operator > (const Node& other) {
+				return this->count > other.count;
 			}
-			return *this;
-		}
-		bool operator > (const Node& other) {
-			return this->count > other.count;
-		}
-		bool operator < (const Node& other) {
-			return this->count > other.count;
-		}
-		bool operator == (const Node& other) {
-			return this->symbol == other.symbol;
-		}
-		bool operator != (const Node& other) {
-			return !(*this == other);
-		}
+			bool operator < (const Node& other) {
+				return this->count < other.count;
+			}
+			bool operator == (const Node& other) {
+				return this->symbol == other.symbol;
+			}
+			bool operator != (const Node& other) {
+				return !(*this == other);
+			}
+		};
+		std::vector<Node> node;
+		std::vector<int> leaf;
 	};
 
-	std::vector<Node> tree(258);
+	Tree tree;
 
 	void initializeModel() {
-		//we dont use index 0
-		for (unsigned char index : std::ranges::iota_view(1, END_OF_STREAM + 1)) {
-			tree[index].symbol = (char)index;
-			tree[index].count = 1;
+		tree.node.clear(); tree.node.resize(TREE_SIZE);
+		tree.leaf.clear(); tree.leaf.resize(NO_OF_LEAFS);
+		total = 0;
+		for (int index : std::ranges::iota_view(1, TREE_SIZE)) {//we dont use index 0
+			tree.node[index].count = 1;
+			if (index <= END_OF_STREAM)
+				tree.node[index].symbol = (unsigned char)(index-1);
+			tree.leaf[index-1] = index;
+			total++;
 		}
 	}
 
@@ -55,11 +66,11 @@ namespace mod2 {
 			int childNode = multiplier * i;
 			++counter;
 			block = 1 << counter;
-			if (childNode < END_OF_STREAM) {
+			if (childNode < TREE_SIZE) {
 				for (int n{ 0 }; n < block; ++n) {
-					if ((childNode + n) == END_OF_STREAM)
+					if ((childNode + n) == TREE_SIZE)
 						return result;
-					result += tree[(childNode + n)].count;
+					result += tree.node[(childNode + n)].count;
 				}
 				multiplier <<= 1;
 			}
@@ -69,65 +80,95 @@ namespace mod2 {
 	}
 
 	void calculateLeftSubtree(int i) {
-		for (; i != 0; i /= 2) {
-			tree[i].leftChildCumCount = getSum(i);
-		}
+		tree.node[i].leftChildCumCount = getSum(i);
+	}
+
+	template <typename T>
+	void swap(T& val1, T& val2) {
+		T temp = val1;
+		val1 = val2;
+		val2 = temp;
 	}
 
 	void sort(int c) {
-		int pos = int(c) + 1;
-		int j = pos - 1;
-		for (; tree[j] < tree[pos] && j > 0; --j) {}
-		j++;
+		int pos = tree.leaf[c];
+		int j = pos;
+		for (; j > 1 && tree.node[j - 1] < tree.node[pos]; --j);
 		if (j != pos) {
-			Node temp = tree[pos];
-			memmove(&tree[j + 1], &tree[j], (pos - j) * sizeof(Node));
-			tree[j] = temp;
+			swap(tree.node[j], tree.node[pos]);
+			swap(tree.leaf[j-1], tree.leaf[pos-1]);
 		}
-		calculateLeftSubtree(pos);
+		for (int i = 257; i > 0; --i)
+			calculateLeftSubtree(i);
 	}
-
 
 	int getLowerLimit(int position) {
 		int remainder{};
-		int lowerLimit{ tree[position].leftChildCumCount };
+		int lowerLimit{ tree.node[position].leftChildCumCount };
 		while (position > 1) {
 			remainder = position % 2;
 			position /= 2;
 			if (remainder == 1) {
-				lowerLimit += tree[position].leftChildCumCount;
-				lowerLimit += tree[position].count;
+				lowerLimit += (tree.node[position].leftChildCumCount + tree.node[position].count);
 			}
 		}
 		return lowerLimit;
 	}
 
-	std::tuple<int, int> range(char symbol) {
+	std::tuple<USHORT, USHORT> range(int symbol) {
 		int upperLimit{}, lowerLimit{};
-		int position = 1;
-		//find symbol position in tree
-		for (auto elem = tree.begin() + 1; elem != tree.end(); ++elem) {
-			if (elem->symbol == symbol)
-				break;
-			++position;
-		}
+		int position = tree.leaf[symbol];
 		lowerLimit = getLowerLimit(position);
-		upperLimit = lowerLimit + tree[position].count;
-		return std::tuple<int, int>{lowerLimit, upperLimit};
+		upperLimit = lowerLimit + tree.node[position].count;
+		return std::tuple<USHORT, USHORT>{lowerLimit, upperLimit};
 	}
 
 	void updateModel(int c) {
 		auto start = std::chrono::high_resolution_clock::now();
-		unsigned total{ 0 };
-		USHORT scale{ 1 };
-		tree[c + 1].count++;
-		sort(c);
-		if (tree[1].count == 255) {
-			//257 not 258 cos' we are not resizing the END_OF_STREAM
-			std::for_each(std::begin(tree) + 1, std::begin(tree) + 257, [](Node& node) {node.count = (node.count + 1) / 2; });
+		tree.node[tree.leaf[c]].count++;
+		++total;
+		if (tree.node[1].count >= 255) {
+			total = 0;
+			std::for_each(std::begin(tree.node) + 1, std::end(tree.node), [](Tree::Node& node) {
+				node.count = (node.count + 1) / 2;
+				total += node.count;
+			});
 		}
-		//auto [_, h] = range(257);
+		//scale counts if they are greater than max size
+		if (total > 16383) {
+			total = 0;
+			std::for_each(std::begin(tree.node) + 1, std::end(tree.node), [](Tree::Node& node) {
+				node.count = (node.count + 1) / 2;
+				total += node.count;
+				});
+		}
+		sort(c);
 		auto stop = std::chrono::high_resolution_clock::now();
 		timer += std::chrono::duration<float>(stop - start).count();
+	}
+
+	void convertIntToSymbol(int c, Symbol& s) {
+		auto [l, h] = range(c);
+		s.scale = total;
+		s.low_count = USHORT(l);
+		s.high_count = USHORT(h);
+	}
+
+	void getSymbolScale(Symbol& s) {
+		s.scale = total;
+	}
+
+	int convertSymbolToInt(long index, Symbol& s) {
+		int c{ 0 };
+		while (1) {	
+			auto [l, h] = range(c);
+			if (index < h && index >= l) {
+				s.low_count = (USHORT)l;
+				s.high_count = (USHORT)h;
+				break;
+			}
+			c++;
+		}
+		return c;
 	}
 }

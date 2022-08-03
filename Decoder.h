@@ -8,10 +8,11 @@
 #include <ranges>
 #include <format>
 #include "BitIO.h"
-#include "optimizedModel.h"
-#include "Model.h"
 #include "Symbol.h"
+//#include "optimizedModel.h"
+#include "Model.h"
 using namespace mod1;
+//using namespace mod2;
 
 void initializeArithmeticDecoder(std::unique_ptr<stl::BitFile>& input, USHORT& code) {
 	for (int i{ 0 }; i < 16; ++i) {
@@ -20,26 +21,16 @@ void initializeArithmeticDecoder(std::unique_ptr<stl::BitFile>& input, USHORT& c
 	}
 }
 
-void getSymbolScale(Symbol& s) {
-	s.scale = totals[END_OF_STREAM + 1];
-}
-
 long getCurrentIndex(Symbol& s, USHORT low, USHORT high, USHORT code) {
 	long range{ high - low + 1 };
 	long index = (long)(((code - low) + 1) * s.scale - 1) / range;
 	return index;
 }
 
-int convertSymbolToInt(long index, Symbol& s) {
-	int c{};
-	for (c = END_OF_STREAM; index < totals[c]; c--) {}
-	s.high_count = totals[c + 1];
-	s.low_count = totals[c];
-	return c;
-}
-
 void removeSymbolFromStream(std::unique_ptr<stl::BitFile>& input, Symbol& s, USHORT& low, USHORT& high, USHORT& code) {
 	long range{ (high - low) + 1 };
+	//std::cout << std::format("{:<7}", low + static_cast<USHORT>((range * s.high_count) / s.scale - 1));
+	//std::cout << std::format("{:<7}", low + static_cast<USHORT>((range * s.low_count) / s.scale));
 	high = low + (USHORT)((range * s.high_count) / s.scale - 1);
 	low = low + (USHORT)((range * s.low_count) / s.scale);
 	for (;;) {

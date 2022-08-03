@@ -1,4 +1,11 @@
 #pragma once
+#include <iostream>
+#include <algorithm>
+#include <numeric>
+#include <ranges>
+#include <chrono>
+#include "Symbol.h"
+
 
 namespace mod1 {
 	using USHORT = unsigned short;
@@ -42,5 +49,23 @@ namespace mod1 {
 		totals[END_OF_STREAM + 1] = totals[END_OF_STREAM] + 1;
 		auto stop = std::chrono::high_resolution_clock::now();
 		timer += std::chrono::duration<float>(stop - start).count();
+	}
+
+	void convertIntToSymbol(int c, Symbol& s) {
+		s.scale = totals[END_OF_STREAM + 1];
+		s.low_count = totals[c];
+		s.high_count = totals[c + 1];
+	}
+
+	void getSymbolScale(Symbol& s) {
+		s.scale = totals[END_OF_STREAM + 1];
+	}
+
+	int convertSymbolToInt(long index, Symbol& s) {
+		int c{};
+		for (c = END_OF_STREAM; index < totals[c]; c--) {}
+		s.high_count = totals[c + 1];
+		s.low_count = totals[c];
+		return c;
 	}
 }

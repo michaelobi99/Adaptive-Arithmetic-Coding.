@@ -8,10 +8,10 @@
 #include <ranges>
 #include "BitIO.h"
 #include <string>
-#include "optimizedModel.h"
-#include "Model.h"
 #include "Symbol.h"
 #include <bitset>
+//#include "optimizedModel.h"
+#include "Model.h"
 using namespace mod1;
 //using namespace mod2;
 
@@ -19,15 +19,13 @@ const char* compressionName = "Adaptive order-0 model with arithmetic coding\n";
 const char* usage = "inputFile outputFile\n";
 
 
-
-void convertIntToSymbol(int c, Symbol& s) {
-	s.scale = totals[END_OF_STREAM + 1];
-	s.low_count = totals[c];
-	s.high_count = totals[c + 1];
-}
-
 void encodeSymbol(std::unique_ptr<stl::BitFile>& output, Symbol& s, USHORT& low, USHORT& high, USHORT& underflowBits) {
 	unsigned long range = (high - low) + 1;
+	//std::cout << std::format("{:<7}", low + static_cast<USHORT>((range * s.high_count) / s.scale - 1));
+	//std::cout << std::format("{:<7}", low + static_cast<USHORT>((range * s.low_count) / s.scale));
+
+	static int counter = 0;
+	//std::cout << std::format("{:<7}{:<7}", ++counter);
 	high = low + static_cast<USHORT>((range * s.high_count) / s.scale - 1);
 	low = low + static_cast<USHORT>((range * s.low_count) / s.scale);
 	//the following loop churns out new bits until high and low are far enough apart to have stabilized
