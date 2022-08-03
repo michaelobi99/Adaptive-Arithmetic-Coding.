@@ -8,8 +8,10 @@
 #include <ranges>
 #include <format>
 #include "BitIO.h"
+#include "optimizedModel.h"
 #include "Model.h"
-
+#include "Symbol.h"
+using namespace mod1;
 
 void initializeArithmeticDecoder(std::unique_ptr<stl::BitFile>& input, USHORT& code) {
 	for (int i{ 0 }; i < 16; ++i) {
@@ -67,10 +69,7 @@ void expandFile(std::unique_ptr<stl::BitFile>& input, std::fstream& output) {
 	int c{};
 	USHORT low{ 0 }, high{ 0xffff }, code{ 0 };
 	long index{ 0 };
-	unsigned char counts[256];
-	for (auto& elem : counts)
-		elem = 1;
-	initializeModel(counts);
+	initializeModel();
 	initializeArithmeticDecoder(input, code);
 	for (;;) {
 		getSymbolScale(s);
@@ -80,6 +79,6 @@ void expandFile(std::unique_ptr<stl::BitFile>& input, std::fstream& output) {
 			break;
 		removeSymbolFromStream(input, s, low, high, code);
 		output.put(c);
-		updateModel(c, counts);
+		updateModel(c);
 	}
 }

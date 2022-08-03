@@ -31,7 +31,7 @@ uintmax_t fileSize(fs::path const& path) {
 }
 
 int main() {
-	std::atexit(exittHandler);
+	std::atexit(mod1::exittHandler);
 	auto timer = Timer();
 	std::fstream output1(R"(..\AdaptiveArithmeticCoding\testFile3.txt)", std::ios_base::out | std::ios_base::binary);
 	std::fstream input(R"(..\AdaptiveArithmeticCoding\testFile.txt)", std::ios_base::in | std::ios_base::binary);
@@ -46,7 +46,7 @@ int main() {
 		compressFile(input, output);
 		timer.Stop();
 		std::cout << "\nFile compression complete\n";
-		printf("Arithmetic coding compression time = %f milliseconds\n\n", timer.time());
+		printf("Arithmetic coding compression time = %f seconds\n\n", timer.time());
 		stl::closeOutputBitFile(output);
 
 		std::cout << "Expansion started....\n";
@@ -54,7 +54,7 @@ int main() {
 		expandFile(input1, output1);
 		timer.Stop();
 		std::cout << "\nFile expansion complete\n";
-		printf("Arithmetic coding expansion time = %f milliseconds\n\n", timer.time());
+		printf("Arithmetic coding expansion time = %f seconds\n\n", timer.time());
 		stl::closeInputBitFile(input1);
 		output1.close();
 
