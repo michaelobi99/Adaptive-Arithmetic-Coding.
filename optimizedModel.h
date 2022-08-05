@@ -138,7 +138,6 @@ namespace mod2 {
 	}
 
 	void convertIntToSymbol(int c, Symbol& s) {
-		static int counter = 0;
 		auto [l, h] = range(c);
 		s.scale = total;
 		s.low_count = l;
@@ -150,7 +149,23 @@ namespace mod2 {
 	}
 
 	int convertSymbolToInt(long index, Symbol& s) {
-		static int counter1 = 0;
+		int mid = 1;
+		while (true) {
+			int low = getLowerLimit(mid);
+			int high = tree[mid].count + low;
+			if (index >= low && high > index) {
+				s.low_count = low;
+				s.high_count = high;
+				return tree[mid].symbol;
+			}
+			else if (index >= high)
+				mid = (mid << 1) + 1;
+			else if (low >= index)
+				mid <<= 1;
+		}
+		
+	}
+	/*int convertSymbolToInt(long index, Symbol& s) {
 		int idx = 0;
 		while (1) {
 			auto [l, h] = range(idx);
@@ -161,5 +176,5 @@ namespace mod2 {
 			}
 			++idx;
 		}
-	}
+	}*/
 }
