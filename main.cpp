@@ -31,7 +31,7 @@ uintmax_t fileSize(fs::path const& path) {
 }
 
 int main() {
-	std::atexit(mod1::exittHandler);
+	std::atexit(mod2::exittHandler);
 	auto timer = Timer();
 	std::fstream output1(R"(..\AdaptiveArithmeticCoding\testFile3.txt)", std::ios_base::out | std::ios_base::binary);
 	std::fstream input(R"(..\AdaptiveArithmeticCoding\testFile.txt)", std::ios_base::in | std::ios_base::binary);

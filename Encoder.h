@@ -10,10 +10,10 @@
 #include <string>
 #include "Symbol.h"
 #include <bitset>
-//#include "optimizedModel.h"
-#include "Model.h"
-using namespace mod1;
-//using namespace mod2;
+#include "optimizedModel.h"
+//#include "Model.h"
+//using namespace mod1;
+using namespace mod2;
 
 const char* compressionName = "Adaptive order-0 model with arithmetic coding\n";
 const char* usage = "inputFile outputFile\n";
@@ -21,11 +21,7 @@ const char* usage = "inputFile outputFile\n";
 
 void encodeSymbol(std::unique_ptr<stl::BitFile>& output, Symbol& s, USHORT& low, USHORT& high, USHORT& underflowBits) {
 	unsigned long range = (high - low) + 1;
-	//std::cout << std::format("{:<7}", low + static_cast<USHORT>((range * s.high_count) / s.scale - 1));
-	//std::cout << std::format("{:<7}", low + static_cast<USHORT>((range * s.low_count) / s.scale));
-
 	static int counter = 0;
-	//std::cout << std::format("{:<7}{:<7}", ++counter);
 	high = low + static_cast<USHORT>((range * s.high_count) / s.scale - 1);
 	low = low + static_cast<USHORT>((range * s.low_count) / s.scale);
 	//the following loop churns out new bits until high and low are far enough apart to have stabilized
@@ -76,6 +72,7 @@ size_t readBytes(std::fstream& input, std::string& buffer, size_t limit) {
 		buffer.push_back((char)ch);
 		++counter;
 	}
+	buffer.shrink_to_fit();
 	return counter;
 }
 
@@ -89,7 +86,7 @@ void compressFile(std::fstream& input, std::unique_ptr<stl::BitFile>& output) {
 	size_t numBytesRead = 0;
 	do {
 		numBytesRead = readBytes(input, buffer, bufferSize);
-		for (auto c : buffer) {
+		for (char c : buffer) {
 			convertIntToSymbol(c, s);
 			encodeSymbol(output, s, low, high, underflowBits);
 			updateModel(c);

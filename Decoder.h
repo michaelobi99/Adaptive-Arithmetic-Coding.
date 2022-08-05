@@ -9,10 +9,10 @@
 #include <format>
 #include "BitIO.h"
 #include "Symbol.h"
-//#include "optimizedModel.h"
-#include "Model.h"
-using namespace mod1;
-//using namespace mod2;
+#include "optimizedModel.h"
+//#include "Model.h"
+//using namespace mod1;
+using namespace mod2;
 
 void initializeArithmeticDecoder(std::unique_ptr<stl::BitFile>& input, USHORT& code) {
 	for (int i{ 0 }; i < 16; ++i) {
@@ -66,8 +66,9 @@ void expandFile(std::unique_ptr<stl::BitFile>& input, std::fstream& output) {
 		getSymbolScale(s);
 		index = getCurrentIndex(s, low, high, code);
 		c = convertSymbolToInt(index, s);
-		if (c == END_OF_STREAM)
+		if (c == END_OF_STREAM) {
 			break;
+		}
 		removeSymbolFromStream(input, s, low, high, code);
 		output.put(c);
 		updateModel(c);

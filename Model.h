@@ -9,7 +9,6 @@
 
 namespace mod1 {
 	using USHORT = unsigned short;
-	constexpr int END_OF_STREAM = 256;
 	USHORT totals[258];
 	unsigned char counts[256];
 	float timer = 0;
@@ -36,10 +35,8 @@ namespace mod1 {
 		if (counts[c] == 255) {
 			std::for_each(counts, counts + 256, [](unsigned char& count) {count = (count + 1) / 2; });
 		}
-		total = std::accumulate(counts, counts + 256, 1);//start from one to account for EOF symbol
-		if (total > (32767 - 256))
-			scale = 4;
-		else if (total > 16383)
+		total = std::accumulate(counts, counts + 256, 1);//start from one to account for EOF symbo
+		if (total > MAX_SIZE)
 			scale = 2;
 
 		for (int i = 0; i < 256; ++i) {
